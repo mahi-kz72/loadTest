@@ -1,0 +1,23 @@
+# k6 artifacts
+summary.html
+summary.json
+
+# local env
+.env
+.env.*
+!env.example
+
+# binaries and archives
+k6
+k6.exe
+k6-v*/
+*.zip
+*.tar
+*.tar.*
+
+# macOS
+.DS_Store
+
+# Python cache if any
+__pycache__/
+*.pyc
