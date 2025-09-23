@@ -15,19 +15,7 @@ Each test writes a summary report to `summary.html` and `summary.json` at the pr
 - A system-installed k6 (see `https://k6.io/docs/getting-started/installation/`)
 - A valid `ACCESS_TOKEN` (auth scheme can be `Token`)
 
-If your shell shows `command not found: k6`, run the bundled binary directly (via `./k6` symlink or absolute path) or add it to your PATH for the session:
-
-```bash
-# Make binary executable once (if needed)
-chmod +x /Users/apple/Downloads/loadTest/k6-v1.2.3-macos-arm64/k6
-
-# Option A: run via absolute path
-/Users/apple/Downloads/loadTest/k6-v1.2.3-macos-arm64/k6 version
-
-# Option B: add to PATH temporarily
-export PATH="/Users/apple/Downloads/loadTest/k6-v1.2.3-macos-arm64:$PATH"
-k6 version
-```
+If your shell shows `command not found: k6`, run the bundled binary directly (via `./k6` symlink or absolute path) or add it to your PATH for the session.
 
 ---
 
