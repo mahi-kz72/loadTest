@@ -2,6 +2,10 @@
 summary.html
 summary.json
 
+# Generated reports (organized by API)
+reports/
+run.log
+
 # local env
 .env
 .env.*
