@@ -12,23 +12,10 @@ Each test writes individual summary reports to the `reports/` directory with API
 ---
 
 ## Prerequisites
-- macOS arm64 bundled k6 binary located at `k6-v1.2.3-macos-arm64/k6`
-- Or a system-installed k6 (see `https://k6.io/docs/getting-started/installation/`)
-- A valid `ACCESS_TOKEN` (auth scheme can be `Token` or `Bearer`)
+- A system-installed k6 (see `https://k6.io/docs/getting-started/installation/`)
+- A valid `ACCESS_TOKEN` (auth scheme can be `Token`)
 
-If your shell shows `command not found: k6`, run the bundled binary directly (via `./k6` symlink or absolute path) or add it to your PATH for the session:
-
-```bash
-# Make binary executable once (if needed)
-chmod +x /Users/apple/Downloads/loadTest/k6-v1.2.3-macos-arm64/k6
-
-# Option A: run via absolute path
-/Users/apple/Downloads/loadTest/k6-v1.2.3-macos-arm64/k6 version
-
-# Option B: add to PATH temporarily
-export PATH="/Users/apple/Downloads/loadTest/k6-v1.2.3-macos-arm64:$PATH"
-k6 version
-```
+If your shell shows `command not found: k6`, run the bundled binary directly (via `./k6` symlink or absolute path) or add it to your PATH for the session.
 
 ---
 
@@ -37,11 +24,10 @@ A sample env file is provided at `env.example`. Key variables:
 
 - BASE_URL: default `https://testnetapiv2.nobitex.ir`
 - ACCESS_TOKEN: auth token value
-- AUTH_SCHEME: `Token` (default) or `Bearer` for `Authorization` header
+- AUTH_SCHEME: `Token` (default) for `Authorization` header
 - SPIKE_MAX_VUS, RAMP_UP_S, HOLD_S, RAMP_DOWN_S: traffic shaping
 - P95_MS: p95 latency threshold (ms)
 
-You can pass variables via `-e` flags to k6 or export them from the file:
 
 ```bash
 export $(grep -v '^#' env.example | xargs)
@@ -138,8 +124,8 @@ To run all tests at once and generate all reports:
 └── README.md
 ```
 
----
 
+<<<<<<< HEAD
 ## Improvements (for future PR)
 - Add CI job to run a small smoke (e.g., 1 VU, 3 iterations) on PRs.
 - Consider centralizing shared helpers (headers, jitter, summary) in a module.
