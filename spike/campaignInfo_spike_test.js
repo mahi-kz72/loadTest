@@ -5,14 +5,16 @@ import exec from "k6/execution";
 
 // Env & Config
 const BASE_URL = __ENV.BASE_URL || "https://testnetapiv2.nobitex.ir";
-const ACCESS_TOKEN = String(__ENV.ACCESS_TOKEN || "").trim();
+const ACCESS_TOKEN = String(__ENV.ACCESS_TOKEN || "340d8cd1b7afcde2ca72050f9da6783cad0a1b60").trim();
 const AUTH_SCHEME = (String(__ENV.AUTH_SCHEME || "Token")).trim();
 
 
 const UTM_CAMPAIGN = __ENV.UTM_CAMPAIGN || "multistep_payout:base:crypto_champions_2:public";
-
 const UTM_SOURCE = __ENV.UTM_SOURCE || "snapp";
 const UTM_MEDIUM = __ENV.UTM_MEDIUM || "banner";
+
+// Campaign Info endpoint - using same as campaigns list but with different test focus
+const CAMPAIGN_INFO_ENDPOINT = __ENV.CAMPAIGN_INFO_ENDPOINT || "/marketing/campaign";
 
 const EXPECT_RATE_LIMIT = (/^(true|1)$/i).test(__ENV.EXPECT_RATE_LIMIT || "false");
 const DEBUG_LOG = (/^(true|1)$/i).test(__ENV.DEBUG_LOG || "false");
@@ -79,30 +81,27 @@ function logDebug(res, label = "campaignInfo") {
 
 // Test Step
 function getCampaignInfo() {
-  // URL encode parameters to handle colons and special characters
   const url =
-    `${BASE_URL}/marketing/campaign` +
+    `${BASE_URL}${CAMPAIGN_INFO_ENDPOINT}` +
     `?utmCampaign=${encodeURIComponent(UTM_CAMPAIGN)}` +
     `&utmSource=${encodeURIComponent(UTM_SOURCE)}` +
     `&utmMedium=${encodeURIComponent(UTM_MEDIUM)}`;
 
   const tags = { endpoint: "campaignInfo", scenario: exec.scenario.name };
 
-  // چند بار اول URL رو لاگ کن تا مطمئن شیم _2 توشه
   if (__ENV.DEBUG_LOG && (getCampaignInfo._printed = (getCampaignInfo._printed || 0) + 1) <= 3) {
     console.log(`REQ URL -> ${url}`);
   }
 
   const res = http.get(url, {
-    headers: buildHeaders(),  // Authorization: Token <token>
-    tags,                     // متریک‌های built-in هم تگ می‌گیرن
+    headers: buildHeaders(),  
+    tags,                     
     timeout: "60s",
   });
 
-  // متریک مدت
+ 
   campaignInfo_duration.add(res.timings.duration, tags);
 
-  // شمارنده‌ها
   if (res.status === 400) status_400.add(1, tags);
   if (res.status === 401) status_401.add(1, tags);
   if (res.status === 429) status_429.add(1, tags);
@@ -110,7 +109,7 @@ function getCampaignInfo() {
     unexpected_error.add(1, tags);
   }
 
-  // چک‌ها
+  //check
   const okStatus = check(res, { "HTTP 200": (r) => r.status === 200 });
 
   const okPayload =
@@ -126,13 +125,12 @@ function getCampaignInfo() {
       },
     });
 
-  // لاگ بدنه برای خطاهای مهم - Enhanced logging for 429 errors
+  // log error body
   if (res.status === 400 || res.status === 429) {
     let body;
     try { body = JSON.stringify(res.json()); } catch { body = res.body; }
     console.error(`BODY[${tags.scenario}][status=${res.status}] ${body}`);
     
-    // Special detailed logging for 429 errors to help DevOps/Backend
     if (res.status === 429) {
       console.error(`=== 429 RATE LIMIT DETAILS ===`);
       console.error(`URL: ${url}`);
@@ -151,7 +149,7 @@ function getCampaignInfo() {
   return { okStatus, okPayload };
 }
 
-// ---------- Default VU function ----------
+// Default VU function
 export default function () {
   getCampaignInfo();
 }
