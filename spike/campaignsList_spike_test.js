@@ -1,16 +1,19 @@
-// spike/campaignsList_spike_test.js
-
 import http from 'k6/http';
 import { sleep, check } from 'k6';
 import { Counter, Rate } from 'k6/metrics';
 
-// برای چاپ جدول پیش‌فرض k6 و ساخت HTML:
+// For printing the default k6 table and creating HTML:
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js';
 import { htmlReport } from 'https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js';
 
 const BASE_URL     = __ENV.BASE_URL     || 'https://testnetapiv2.nobitex.ir';
-const ACCESS_TOKEN = __ENV.ACCESS_TOKEN || '';
+const ACCESS_TOKEN = __ENV.ACCESS_TOKEN || '340d8cd1b7afcde2ca72050f9da6783cad0a1b60';
 const AUTH_SCHEME  = (__ENV.AUTH_SCHEME || 'Token').toString();
+
+// UTM parameters from curl command
+const UTM_CAMPAIGN = __ENV.UTM_CAMPAIGN || 'multistep_payout:base:crypto_champions_2:public';
+const UTM_SOURCE   = __ENV.UTM_SOURCE   || 'snapp';
+const UTM_MEDIUM   = __ENV.UTM_MEDIUM   || 'banner';
 
 const SPIKE_MAX_VUS = Number(__ENV.SPIKE_MAX_VUS || 20);
 const RAMP_UP_S     = Number(__ENV.RAMP_UP_S     || 5);
@@ -18,7 +21,7 @@ const HOLD_S        = Number(__ENV.HOLD_S        || 10);
 const RAMP_DOWN_S   = Number(__ENV.RAMP_DOWN_S   || 5);
 const P95_MS        = Number(__ENV.P95_MS        || 500);
 
-// چون می‌خوای 429 خطا حساب شود، پیش‌فرض را false می‌گذاریم:
+// Since we want to count 429 errors, we set the default to false:
 const EXPECT_RATE_LIMIT = String(__ENV.EXPECT_RATE_LIMIT || 'false').toLowerCase() !== 'false';
 
 // ---- metrics
@@ -34,26 +37,39 @@ const unexpected_error = new Rate('unexpected_error');
 // ---- options
 export const options = {
   scenarios: {
-    spike: {
-      executor: 'ramping-vus',
-      startVUs: 0,
-      stages: [
-        { duration: `${RAMP_UP_S}s`,   target: SPIKE_MAX_VUS },
-        { duration: `${HOLD_S}s`,      target: SPIKE_MAX_VUS },
-        { duration: `${RAMP_DOWN_S}s`, target: 0 },
-      ],
-      gracefulStop: '30s',
-      gracefulRampDown: '30s',
+    warmup: {
+      executor: 'constant-arrival-rate',
+      rate: 20, timeUnit: '1s',
+      duration: '15s',
+      preAllocatedVUs: 50, maxVUs: 200,
       exec: 'campaignsList',
+      startTime: '0s',
+    },
+    spike: {
+      executor: 'constant-arrival-rate',
+      rate: 60, timeUnit: '1s',
+      duration: '15s',
+      preAllocatedVUs: 150, maxVUs: 1000,
+      exec: 'campaignsList',
+      startTime: '15s',
+    },
+    recovery: {
+      executor: 'constant-arrival-rate',
+      rate: 20, timeUnit: '1s',
+      duration: '20s',
+      preAllocatedVUs: 50, maxVUs: 200,
+      exec: 'campaignsList',
+      startTime: '30s',
     },
   },
   thresholds: {
-    'http_req_duration{endpoint:campaigns}': [`p(95)<${P95_MS}`],
-    'unexpected_error': ['rate==0'],  // هر خطای غیرمنتظره = fail
-    'status_429': ['count==0'],       // هر 429 = fail (سخت‌گیرانه)
+    'http_req_duration{endpoint:campaigns}': ['p(95)<500'],
     'checks{endpoint:campaigns,check:payload_ok}': ['rate>0.99'],
+    'status_429': ['count==0'],
+    'unexpected_error': ['rate==0'],
   },
 };
+
 
 // ---- helpers
 function authHeaders() {
@@ -72,7 +88,13 @@ function sleepJitter(minMs, maxMs) {
 
 // ---- main scenario
 export function campaignsList() {
-  const res = http.get(`${BASE_URL}/marketing/campaigns`, authHeaders());
+  // Build URL with UTM parameters (manually encoded to handle colons and special characters)
+  const encodedCampaign = encodeURIComponent(UTM_CAMPAIGN);
+  const encodedSource = encodeURIComponent(UTM_SOURCE);
+  const encodedMedium = encodeURIComponent(UTM_MEDIUM);
+  
+  const url = `${BASE_URL}/marketing/campaign?utmCampaign=${encodedCampaign}&utmSource=${encodedSource}&utmMedium=${encodedMedium}`;
+  const res = http.get(url, authHeaders());
 
   if (res.status >= 200 && res.status < 300) {
     status_2xx.add(1); if (res.status === 200) status_200.add(1);
@@ -94,18 +116,23 @@ export function campaignsList() {
   if (ok200) {
     const b = res.json();
     check(b, {
-      'payload ok': (x) => x?.status === 'ok' && Array.isArray(x?.campaigns) && Array.isArray(x?.publicCampaigns),
+      'payload ok': (x) => x?.status === 'ok' && x?.details && Array.isArray(x?.details?.items),
     }, { endpoint: 'campaigns', check: 'payload_ok' });
   }
 
   sleepJitter(150, 400);
 }
 
-// ---- summary: جدول پیش‌فرض k6 + فایل HTML
+// Default VU function for CLI runs
+export default function () {
+  campaignsList();
+}
+
+//  summary: default k6 table + HTML file
 export function handleSummary(data) {
   return {
     stdout: textSummary(data, { indent: ' ', enableColors: true }),
-    'summary.html': htmlReport(data),
-    'summary.json': JSON.stringify(data, null, 2),
+    'reports/campaignsList_summary.html': htmlReport(data),
+    'reports/campaignsList_summary.json': JSON.stringify(data, null, 2),
   };
 }

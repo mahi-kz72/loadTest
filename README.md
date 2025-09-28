@@ -7,7 +7,7 @@ This repository contains k6 spike tests for three marketing endpoints:
 - campaign info: GET `/marketing/campaign`
 - reward capacity: GET `/marketing/campaign/reward/capacity`
 
-Each test writes a summary report to `summary.html` and `summary.json` at the project root.
+Each test writes individual summary reports to the `reports/` directory with API-specific names.
 
 ---
 
@@ -101,7 +101,16 @@ k6 run /Users/apple/Downloads/loadTest/spike/rewardCapacity_spike_test.js \
 
 Note: UTM parameters in this script are also configurable via env.
 
-Outputs: `summary.html` and `summary.json` are generated/updated at the project root.
+Outputs: Individual reports are generated in the `reports/` directory:
+- `reports/campaignsList_summary.html` and `reports/campaignsList_summary.json`
+- `reports/campaignInfo_summary.html` and `reports/campaignInfo_summary.json`
+- `reports/rewardCapacity_summary.html` and `reports/rewardCapacity_summary.json`
+
+### Quick Run All Tests
+To run all tests at once and generate all reports:
+```bash
+./run_all_tests.sh
+```
 
 ---
 
@@ -114,11 +123,18 @@ Outputs: `summary.html` and `summary.json` are generated/updated at the project 
 │   ├── campaignsList_spike_test.js
 │   └── rewardCapacity_spike_test.js
 │
+├── reports/
+│   ├── campaignsList_summary.html
+│   ├── campaignsList_summary.json
+│   ├── campaignInfo_summary.html
+│   ├── campaignInfo_summary.json
+│   ├── rewardCapacity_summary.html
+│   └── rewardCapacity_summary.json
+│
 ├── env.example
 ├── k6-v1.2.3-macos-arm64/
 ├── k6-v1.2.3-macos-arm64.zip
-├── summary.html
-├── summary.json
+├── run_all_tests.sh
 └── README.md
 ```
 
@@ -133,4 +149,4 @@ Outputs: `summary.html` and `summary.json` are generated/updated at the project 
 ## Notes
 - Set `ACCESS_TOKEN` for endpoints requiring auth.
 - If 429 rate limiting is expected, adjust thresholds accordingly.
-- Use the HTML/JSON report to monitor p95, status distribution, and error rates.
+- Use the HTML/JSON reports in the `reports/` directory to monitor p95, status distribution, and error rates for each API.
