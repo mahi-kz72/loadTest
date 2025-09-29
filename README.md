@@ -117,6 +117,27 @@ Reports:
 - `reports/breakpoint_<TEST_NAME>_summary.html`
 - `reports/breakpoint_<TEST_NAME>_summary.json`
 
+### Breakpoint Tests (per-API shortcuts)
+
+You can also run per-API wrappers in `breakpoint/` that preset sensible defaults:
+
+- Campaigns List breakpoint:
+```bash
+./k6 run breakpoint/campaignsList_breakpoint_test.js --duration 20s
+```
+
+- Campaign Info breakpoint:
+```bash
+./k6 run breakpoint/campaignInfo_breakpoint_test.js --duration 20s
+```
+
+- Reward Capacity breakpoint:
+```bash
+./k6 run breakpoint/rewardCapacity_breakpoint_test.js --duration 20s
+```
+
+You can still override any env var (e.g., token, BASE_URL, ramp settings) via `-e VAR=value`.
+
 ### Quick Run All Tests
 To run all tests at once and generate all reports:
 ```bash
@@ -128,6 +149,12 @@ To run all tests at once and generate all reports:
 ## Folder Structure
 ```
 /loadTest
+│
+├── breakpoint/
+│   ├── discover_breakpoint_test.js
+│   ├── campaign_breakpoint_test.js
+│   ├── campaignInfo_breakpoint_test.js
+│   └── rewardCapacity_breakpoint_test.js
 │
 ├── spike/
 │   ├── campaignInfo_spike_test.js
