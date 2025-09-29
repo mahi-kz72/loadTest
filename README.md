@@ -92,6 +92,31 @@ Outputs: Individual reports are generated in the `reports/` directory:
 - `reports/campaignInfo_summary.html` and `reports/campaignInfo_summary.json`
 - `reports/rewardCapacity_summary.html` and `reports/rewardCapacity_summary.json`
 
+### Breakpoint Discovery Test (generic)
+
+Use the generic breakpoint test to find the capacity breakpoint per API using a ramped arrival-rate and thresholds on p95 latency and error rate. Reports are generated like the other tests.
+
+Run example (campaign endpoint):
+```bash
+./k6 run spike/breakpoint_test.js --duration 20s \
+  -e TEST_NAME=campaign \
+  -e ENDPOINT=/marketing/campaign \
+  -e QUERY='utmCampaign=multistep_payout:base:crypto_champions_2:public&utmSource=snapp&utmMedium=banner'
+```
+
+Key env vars:
+- `TEST_NAME`           logical name for report files and metric tags
+- `METHOD`              GET (default), POST, PUT, PATCH, DELETE
+- `ENDPOINT`            API path, e.g. `/marketing/campaign`
+- `QUERY`               raw query string (will be URI-encoded)
+- `PAYLOAD`, `CONTENT_TYPE` for non-GET methods
+- Thresholds: `P95_SLA_MS` (default 500), `ERROR_RATE_MAX` (default 0.01)
+- Ramp schedule: `RAMP_START`, `RAMP_PEAK`, `RAMP_STEPS`, `STEP_SECONDS`
+
+Reports:
+- `reports/breakpoint_<TEST_NAME>_summary.html`
+- `reports/breakpoint_<TEST_NAME>_summary.json`
+
 ### Quick Run All Tests
 To run all tests at once and generate all reports:
 ```bash
@@ -107,6 +132,7 @@ To run all tests at once and generate all reports:
 ├── spike/
 │   ├── campaignInfo_spike_test.js
 │   ├── campaignsList_spike_test.js
+│   ├── breakpoint_test.js
 │   └── rewardCapacity_spike_test.js
 │
 ├── reports/
@@ -115,7 +141,9 @@ To run all tests at once and generate all reports:
 │   ├── campaignInfo_summary.html
 │   ├── campaignInfo_summary.json
 │   ├── rewardCapacity_summary.html
-│   └── rewardCapacity_summary.json
+│   ├── rewardCapacity_summary.json
+│   ├── breakpoint_campaign_summary.html
+│   └── breakpoint_campaign_summary.json
 │
 ├── env.example
 ├── k6-v1.2.3-macos-arm64/
@@ -125,7 +153,6 @@ To run all tests at once and generate all reports:
 ```
 
 
-<<<<<<< HEAD
 ## Improvements (for future PR)
 - Add CI job to run a small smoke (e.g., 1 VU, 3 iterations) on PRs.
 - Consider centralizing shared helpers (headers, jitter, summary) in a module.
